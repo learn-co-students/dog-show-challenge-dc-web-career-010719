@@ -1,84 +1,83 @@
 document.addEventListener('DOMContentLoaded', () => {
-
 fetchDogs()
 
-
 function fetchDogs(){
-  
   fetch('http://localhost:3000/dogs')
   .then(res => res.json())
   .then(json => json.forEach(function(dog){renderDog(dog)}))
 }
 
-let dogForm = document.querySelector('#dog-form')
-dogForm.addEventListener("submit", patchDog)
-
-
-
 function renderDog(dog){
-
-  dogRow = document.createElement("tr")
-  dogNameCell = document.createElement('td')
-  dogBreedCell = document.createElement('td')
-  dogSexCell = document.createElement('td')
-  dogEditCell= document.createElement('td')
-  dogEditButton = document.createElement('button')
-  dogEditButton.innerHTML = "Edit Dog"
-  dogEditButton.dataset.id = dog.id
-  dogEditButton.addEventListener("click", handleEditDog)
-  dogEditCell.appendChild(dogEditButton)
-  dogNameCell.innerHTML = dog.name
-  dogBreedCell.innerHTML = dog.breed
-  dogSexCell.innerHTML = dog.sex
-
-  dogRow.appendChild(dogNameCell)
-  dogRow.appendChild(dogBreedCell)
-  dogRow.appendChild(dogSexCell)
-  dogRow.appendChild(dogEditCell)
-  tableBody = document.querySelector("#table-body")
-  tableBody.appendChild(dogRow)
+addRow()
+nameCell.innerHTML = dog.name
+breedCell.innerHTML = dog.breed
+sexCell.innerHTML = dog.sex
+editDogButton.id = dog.id
+editDogButton.addEventListener("click", fillEditForm)
 }
 
+let tableBody
+let tableRow
+let nameCell
+let breedCell
+let sexCell
+let editDogCell
+let editDogButton
 
-function handleEditDog(e){
-  fetch(`http://localhost:3000/dogs/${e.target.dataset.id}`)
-  .then(res => res.json())
-  .then(jsonDog => fillForm(jsonDog))
+function addRow(){
+tableBody = document.querySelector("#table-body")
+tableRow = document.createElement("tr")
+tableBody.appendChild(tableRow)
+
+nameCell = document.createElement("td")
+breedCell = document.createElement("td")
+sexCell = document.createElement("td")
+editDogCell = document.createElement("td")
+editDogButton = document.createElement("button")
+editDogButton.innerHTML = "Edit Dog"
+editDogCell.appendChild( editDogButton )
+
+tableRow.appendChild(nameCell)
+tableRow.appendChild(breedCell)
+tableRow.appendChild(sexCell)
+tableRow.appendChild(editDogCell)
 }
 
-function fillForm(jsonDog){
-  dogform = document.querySelector('#dog-form')
+let dogForm = document.querySelector('#dog-form')
 
-dogForm.name.value = jsonDog.name
-dogForm.breed.value = jsonDog.breed
-dogForm.sex.value = jsonDog.sex
-dogForm.dataset.id = jsonDog.id
+function fillEditForm(e){
+
+let myDogName = e.target.parentElement.parentElement.children[0].innerHTML
+let myDogBreed = e.target.parentElement.parentElement.children[1].innerHTML
+let myDogSex = e.target.parentElement.parentElement.children[2].innerHTML
+
+
+dogForm.name.value = myDogName
+dogForm.breed.value = myDogBreed
+dogForm.sex.value = myDogSex
+dogForm.dataset.id = e.target.id
 }
 
-function patchDog(e){
-  e.preventDefault
-  data = {
-    name : e.target.children[0].value,
-    breed : e.target.children[1].value,
-    sex: e.target.children[2].value
-    }
+dogForm.addEventListener("submit", editDog)
 
-  fetch(`http://localhost:3000/dogs/${e.target.dataset.id}`,
-  {
-    method : "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
-  .then(fetchDogs)
+function editDog(e){
 
+let data = {name: e.target.name.value,
+        breed: e.target.breed.value,
+        sex: e.target.sex.value}
+
+fetch(`http://localhost:3000/dogs/${e.target.dataset.id}`,{
+  method: "PATCH",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  body: JSON.stringify(data)
+    })
+    .then(fetchDogs)
 
 
 }
-
-
 
 
 
