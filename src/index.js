@@ -1,80 +1,99 @@
-let dogContainer
-let form
-
-document.addEventListener('DOMContentLoaded', init)
+document.addEventListener("DOMContentLoaded", init)
 
 function init() {
-  dogContainer = document.querySelector('#table-body')
   getAllDogs()
 }
 
 function getAllDogs() {
   fetch('http://localhost:3000/dogs')
   .then(res => res.json())
-  .then(allDogsData => {
-    allDogsData.forEach(renderDog)
+  .then(allDogObjs => {
+    allDogObjs.forEach(renderDog)
   })
 }
 
+function getTableBody() {
+  return document.querySelector("#table-body")
+}
+
+function getEditForm() {
+  return document.querySelector("#dog-form")
+}
+
 function renderDog(dogObj) {
-  let tr = document.createElement('tr')
-  dogContainer.appendChild(tr)
+  let tableBody = getTableBody()
 
-  let tdName = document.createElement('td')
-  tr.appendChild(tdName)
-  tdName.innerText = dogObj.name
+  let row = document.createElement('tr')
+  tableBody.appendChild(row)
 
-  let tdBreed = document.createElement('td')
-  tr.appendChild(tdBreed)
-  tdBreed.innerText = dogObj.breed
+  let cell1 = document.createElement('td')
+  row.appendChild(cell1)
+  cell1.id = 'dog-name-' + dogObj.id
+  cell1.innerText = dogObj.name
 
-  let tdSex = document.createElement('td')
-  tr.appendChild(tdSex)
-  tdSex.innerText = dogObj.sex
+  let cell2 = document.createElement('td')
+  row.appendChild(cell2)
+  cell2.id = 'dog-breed-' + dogObj.id
+  cell2.innerText = dogObj.breed
 
-  let tdEdit = document.createElement('td')
-  tr.appendChild(tdEdit)
+  let cell3 = document.createElement('td')
+  row.appendChild(cell3)
+  cell3.id = 'dog-sex-' + dogObj.id
+  cell3.innerText = dogObj.sex
+
+  let cell4 = document.createElement('td')
+  row.appendChild(cell4)
+
   let editButton = document.createElement('button')
-  tdEdit.appendChild(editButton)
-  editButton.innerText = 'Edit'
+  cell4.appendChild(editButton)
   editButton.dataset.id = dogObj.id
+  editButton.innerText = "Edit"
   editButton.addEventListener('click', handleClickOfEditButton)
 }
 
 function handleClickOfEditButton(event) {
-  fetch(`http://localhost:3000/dogs/${event.currentTarget.dataset.id}`)
-  .then(res => res.json())
-  .then(dogObj => populateEditForm(dogObj))
+  let dogId = event.currentTarget.dataset.id
+  populateEditForm(dogId)
 }
 
-function populateEditForm(dogObj) {
-  document.querySelectorAll('input')[0].value = dogObj.name
-  document.querySelectorAll('input')[1].value = dogObj.breed
-  document.querySelectorAll('input')[2].value = dogObj.sex
-  form = document.querySelector('#dog-form')
-  form.dataset.id = dogObj.id
-  form.addEventListener('submit', handleSubmitOfForm)
+function populateEditForm(dogId) {
+  document.querySelectorAll('input')[0].value = document.querySelector(`#dog-name-${dogId}`).innerText
+  document.querySelectorAll('input')[1].value = document.querySelector(`#dog-breed-${dogId}`).innerText
+  document.querySelectorAll('input')[2].value = document.querySelector(`#dog-sex-${dogId}`).innerText
+
+  let editForm = getEditForm()
+  editForm.dataset.id = dogId
+  editForm.addEventListener('submit', handleSubmitOfForm)
 }
 
 function handleSubmitOfForm(event) {
   event.preventDefault()
-  patchData = {
+  let dogId = event.currentTarget.dataset.id
+  patchDog(dogId)
+}
+
+function patchDog(dogId) {
+  let patchData = {
     name: document.querySelectorAll('input')[0].value,
     breed: document.querySelectorAll('input')[1].value,
     sex: document.querySelectorAll('input')[2].value
   }
-  fetch(`http://localhost:3000/dogs/${event.currentTarget.dataset.id}`, {
+
+  document.querySelectorAll('input')[0].value = ''
+  document.querySelectorAll('input')[1].value = ''
+  document.querySelectorAll('input')[2].value = ''
+
+  fetch(`http://localhost:3000/dogs/${dogId}`, {
     method: "PATCH",
     body: JSON.stringify(patchData),
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json"
     }
-  })
-  .then(editDog)
-}
-
-function editDog() {
-  dogContainer.innerHTML = ''
-  getAllDogs()
+  }).then(res => res.json())
+    .then(patchedDogObj => {
+      document.querySelector(`#dog-name-${dogId}`).innerText = patchedDogObj.name
+      document.querySelector(`#dog-breed-${dogId}`).innerText = patchedDogObj.breed
+      document.querySelector(`#dog-sex-${dogId}`).innerText = patchedDogObj.sex
+    })
 }
